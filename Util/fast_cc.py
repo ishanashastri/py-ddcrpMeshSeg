@@ -1,5 +1,6 @@
 import numpy as np
-from igraph import *
+from scipy.sparse import csr_matrix
+from graph_tool.all import *
 
 def fast_cc(N, assig): 
 #computes table assignments from inputted links
@@ -10,16 +11,11 @@ def fast_cc(N, assig):
     
     for p in range(0, len(assig[0])):
         edges.append((p, assig[0][p]))
-
-    adj = np.zeros((N,N)) #create n x n sparse matrix 
-    for i in range(0, N): #add ones to create adjacency matrix
-        adj[edges[i][0],edges[i][1]]=1
-
-    adj = np.maximum(adj, adj.transpose()) #make symmetric (undirected)        
-
-    iG = Graph.Adjacency(adj.tolist())
-    tables  = np.asarray(iG.components(mode=WEAK).membership)+1
-    tables = np.reshape(tables, (-1,1))
+        if(p != assig[0][p]):
+            edges.append((assig[0][p], p)) #make symmetric    
+    gG = Graph()
+    gG.add_edge_list(edges)
+    tables  = label_components(gG,directed=False)[0].a+1
     largest = max(tables)
 
     return (tables, largest)

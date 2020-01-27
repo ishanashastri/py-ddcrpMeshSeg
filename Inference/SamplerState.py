@@ -32,8 +32,8 @@ class SamplerState:
                 [self,bookkeeper] = self.sample_links(iter,i_s,bookkeeper, prior_param,mniw,data)
             t1 = time.clock()
             
-            print('. ')
-            print('Iteration - %d took %0.03f seconds to complete\n' % (iter, (t1-t0)))
+            print(' ')
+            print('\nIteration - %d took %0.03f seconds to complete\n' % (iter, (t1-t0)))
             if(iter%20==0):
                 pickle.dump(self, open(os.path.join(savedir,('Intermediate_MCMC_sample%d.pkl'%iter)),"wb"))
                 print('Iteration - %d took %0.03f seconds to complete\n' % (iter,(t1-t0)))
@@ -57,11 +57,11 @@ class SamplerState:
             
             #temp_c(table_members) are the customers tab_members are pointing to.
             #remapped_table_members contains these customers mapped to 1:table_members
-            remapped_table_members = np.asarray(inverted_index[0, temp_c[table_members]])
+            remapped_table_members = inverted_index[0, temp_c[table_members]]
 
             #Perform a connected components operation and determine if resetting the
             #current link splits the corresponding table.
-            [tables,split] = fast_cc(remapped_table_members.shape[1],remapped_table_members) 
+            [tables,split] = fast_cc(remapped_table_members.shape[1],remapped_table_members.toarray()) 
         else:
             #shallow cycle found
             split = 1 
@@ -72,19 +72,19 @@ class SamplerState:
         elif(split==2):
             split_customers = table_members[np.nonzero(tables==2)[0]]
             self.t[iter,split_customers] = max(self.t[iter,:])+1 
-            num_tables = self.T[0,iter]+1
+            num_tables = int(self.T[0,iter]+1)
             self.T[0,iter] = num_tables 
             bookkeeper.valid_clusters[num_tables] = num_tables 
             #reset the likelihood of the split tables
-            if (bookkeeper.table_lik[bookkeeper.valid_clusters[self.T[0,iter]]]):       
-                bookkeeper.table_lik[bookkeeper.valid_clusters[self.T[0,iter]]] = 0  
+            if (bookkeeper.table_lik[bookkeeper.valid_clusters[int(self.T[0,iter])]]):       
+                bookkeeper.table_lik[bookkeeper.valid_clusters[int(self.T[0,iter])]] = 0  
             bookkeeper.table_lik[int(table)] = 0 
             
             # reset pairwise table_lik    
-            bookkeeper.pairwise_table_lik[bookkeeper.valid_clusters[self.T[0,iter]],:] = bookkeeper.reset_vec 
-            bookkeeper.pairwise_table_lik[bookkeeper.valid_clusters[table],:] = bookkeeper.reset_vec 
-            bookkeeper.pairwise_table_lik[:,bookkeeper.valid_clusters[self.T[0,iter]]] = np.squeeze(bookkeeper.reset_vec.transpose())
-            bookkeeper.pairwise_table_lik[:,bookkeeper.valid_clusters[table]] = np.squeeze(bookkeeper.reset_vec.transpose())
+            bookkeeper.pairwise_table_lik[bookkeeper.valid_clusters[int(self.T[0,iter])],:] = bookkeeper.reset_vec 
+            bookkeeper.pairwise_table_lik[bookkeeper.valid_clusters[int(table)],:] = bookkeeper.reset_vec 
+            bookkeeper.pairwise_table_lik[:,bookkeeper.valid_clusters[int(self.T[0,iter])]] = np.squeeze(bookkeeper.reset_vec.transpose())
+            bookkeeper.pairwise_table_lik[:,bookkeeper.valid_clusters[int(table)]] = np.squeeze(bookkeeper.reset_vec.transpose())
         
         # sample new link for the current mesh face 
         nbor = np.nonzero(prior_param.d2_mat[:,i_s])[0]
@@ -106,7 +106,8 @@ class SamplerState:
         logposterior=logposterior/np.sum(logposterior) 
 
         c_ji_new = nbor[np.nonzero(np.random.multinomial(1,logposterior))][0]
-        #c_ji_new = nbor[int(len(nbor)/2)]
+        #c_ji_new = nbor[int(len(nbor)/2)] #for debugging
+        
         #update customer links
         self.c[iter,i_s] = c_ji_new 
 
@@ -128,10 +129,11 @@ class SamplerState:
             loc = bookkeeper.valid_clusters[int(small_idx)]
             bookkeeper.table_lik[loc] = 0 
 
-            bookkeeper.valid_clusters[large_idx:int(self.T[0,iter])-1] = bookkeeper.valid_clusters[large_idx+1:int(self.T[0,iter])]  
+            bookkeeper.valid_clusters[large_idx:int(self.T[0,iter])-1] = bookkeeper.valid_clusters[large_idx+1:int(self.T[0,iter])]
+            #print(bookkeeper.valid_clusters[large_idx+1:int(self.T[0,iter])])  
             bookkeeper.pairwise_table_lik[:,loc] = np.ravel(bookkeeper.reset_vec.transpose())
             bookkeeper.pairwise_table_lik[loc,:] = np.ravel(bookkeeper.reset_vec)
-
+            
             self.T[0,iter] = self.T[0,iter]-1 
 
         if (self.T[0,iter]==0):

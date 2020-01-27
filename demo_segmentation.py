@@ -32,7 +32,7 @@ def demo_segmentation():
     be sufficient to produce reasonable results. The segmentation quality
     gradually increases with increasing number of iterations."""
 
-    NUMITER = 35
+    NUMITER = 10
     
     """ SELECT DATASET TO ANALYZE
     2) We include two sets of meshes from the TOSCA dataset (Centaur and Horse).
@@ -59,12 +59,9 @@ def demo_segmentation():
     #and mesh faces as point clouds.  
     [A,left_tris,pcf] = load_data(datapath,DATASET)
     left_tris -= 1 
-    C = A[left_tris]
-    C = C[0,left_tris]
     A = np.take(A,left_tris, axis=0) #-1 for 0 indexing
     A = np.take(A, left_tris, axis=1)
-    print(np.shape(C))
-    print(np.array_equal(C,A))
+   
     # create a ddCRP object.
     ddcrp = ddCRP(float(A[0,2]), A.astype('float64'))
     
@@ -85,7 +82,7 @@ def demo_segmentation():
 
     # view(94,10) axis equal 
     # time.sleep(3.0) 
-    plt.close('all')
+    # plt.close('all')
 
     data = package_data(X,Y,1) 
 

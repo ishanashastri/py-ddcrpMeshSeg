@@ -46,7 +46,7 @@ def clean_labels(A,mniw,param,data,left_tris):
             
             [v,max_ind] = np.maximum(new_lik)
             # If moving the face helps assign it to the new table
-            if(v>curr_lik)
+            if(v>curr_lik):
                 param.t(i) = potential_tabs(max_ind)
                 #update stored table_likelihood
                 table_lik(param.t(i)) = v
