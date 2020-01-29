@@ -6,6 +6,7 @@ from random import sample
 from scipy.sparse import csr_matrix
 from Util.fast_cc import fast_cc
 from numpy.random import *
+np.random.seed(2)
 
 class SamplerState:
     
@@ -57,7 +58,7 @@ class SamplerState:
             
             #temp_c(table_members) are the customers tab_members are pointing to.
             #remapped_table_members contains these customers mapped to 1:table_members
-            remapped_table_members = inverted_index[0, temp_c[table_members]]
+            remapped_table_members = inverted_index[0,temp_c[table_members]].sorted_indices()
 
             #Perform a connected components operation and determine if resetting the
             #current link splits the corresponding table.
@@ -72,9 +73,9 @@ class SamplerState:
         elif(split==2):
             split_customers = table_members[np.nonzero(tables==2)[0]]
             self.t[iter,split_customers] = max(self.t[iter,:])+1 
-            num_tables = int(self.T[0,iter]+1)
+            num_tables = int(self.T[0,iter])+1
             self.T[0,iter] = num_tables 
-            bookkeeper.valid_clusters[num_tables] = num_tables 
+            bookkeeper.valid_clusters[num_tables-1] = num_tables-1
             #reset the likelihood of the split tables
             if (bookkeeper.table_lik[bookkeeper.valid_clusters[int(self.T[0,iter])]]):       
                 bookkeeper.table_lik[bookkeeper.valid_clusters[int(self.T[0,iter])]] = 0  
@@ -105,7 +106,8 @@ class SamplerState:
         logposterior=np.exp(logposterior) 
         logposterior=logposterior/np.sum(logposterior) 
 
-        c_ji_new = nbor[np.nonzero(np.random.multinomial(1,logposterior))][0]
+        c_ji_new = np.random.choice(nbor, size = 1, p = logposterior)[0]
+        #c_ji_new = nbor[np.nonzero(np.random.multinomial(1,logposterior))][0]
         #c_ji_new = nbor[int(len(nbor)/2)] #for debugging
         
         #update customer links
@@ -207,7 +209,6 @@ class SamplerState:
             t_curr = int(t_curr)
             # if we don't already have table likelihoods compute and return them along with their counts.
             #bookkeeper.valid_clusters = np.reshape(bookkeeper.valid_clusters,(-1,1))
-
             if(not bookkeeper.table_lik[bookkeeper.valid_clusters[t_prop]]):
                 bookkeeper.table_lik[bookkeeper.valid_clusters[t_prop]] = self.compute_table_lik(mniw,data,t_prop_members)
             if(not bookkeeper.table_lik[bookkeeper.valid_clusters[t_curr]]):

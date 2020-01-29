@@ -32,7 +32,7 @@ def demo_segmentation():
     be sufficient to produce reasonable results. The segmentation quality
     gradually increases with increasing number of iterations."""
 
-    NUMITER = 10
+    NUMITER = 50
     
     """ SELECT DATASET TO ANALYZE
     2) We include two sets of meshes from the TOSCA dataset (Centaur and Horse).
@@ -117,9 +117,13 @@ def demo_segmentation():
     # Create bookkeeping object
     bookkeeper = BookKeeper(sampler_state,savedir) 
     # Run Sampler
-    converged_sampler_state=sampler_state.run_sampler(ddcrp,mniw,data,bookkeeper,NUMITER) 
-    # save results
-    pickle.dump(converged_sampler_state, open(os.path.join(savedir,'MCMC_Chain.pkl'),"wb"))
+    if(not os.path.isfile(os.path.join(savedir,'MCMC_Chain.pkl'))):
+        converged_sampler_state=sampler_state.run_sampler(ddcrp,mniw,data,bookkeeper,NUMITER) 
+        pickle.dump(converged_sampler_state, open(os.path.join(savedir,'MCMC_Chain.pkl'),"wb"))
+    else:
+        with open(os.path.join(savedir,'MCMC_Chain.pkl'), 'rb') as f:
+            converged_sampler_state = pickle.load(f)
+
     ###########################################################################
 
     ######################## Diagnostics ######################################
