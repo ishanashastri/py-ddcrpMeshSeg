@@ -14,8 +14,6 @@ def package_data(X,Y,numSubj):
  
     # transpose Y
     tY = np.transpose(Y,(1,0,2))
-    #for jj in range(0,len(Y[ii][0])):
-    #    print(Y[:,:,jj].transpose())
     data["Y"] = tY
 
     # number of distinct mesh subjects per partition

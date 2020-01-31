@@ -28,9 +28,8 @@ def demo_analysis(DATASET):
     
     datapath = './Data'
     savedir = './Results'
-    [idk,left_tris,pcf] = load_data(datapath,DATASET)
+    [A,left_tris,pcf] = load_data(datapath,DATASET)
     tri2opposite  = scipy.io.loadmat(os.path.join(datapath,"tri2opposite_Tosca%s.mat" % DATASET), squeeze_me=True, struct_as_record=False)
-    #tri2opposite = tri2opposite["tri2opposite"][0][0][1] #ndarray
     left_tris = tri2opposite.get("tri2opposite").left_tris[:]
     left_tris -= 1 
     left_tris = np.reshape(left_tris, (-1,1))
@@ -41,7 +40,7 @@ def demo_analysis(DATASET):
     labels = converged_sampler_state.get("converged_sampler_state").t
    
     # Measure non rigidity
-    [unk,average_tri_err] = measure_nonrigidity(pcf,labels)
+    [err,average_tri_err] = measure_nonrigidity(pcf,labels)
     
    #######################################################################
     # visualize non rigidity ###############
@@ -57,34 +56,42 @@ def demo_analysis(DATASET):
     else:
         fnames = [os.path.basename(x) for x in sorted(glob.glob(os.path.join(datapath, 'meshes', 'hor*.mat')))]
     
-    data = scipy.io.loadmat(os.path.join(datapath,'meshes',fnames[0]),squeeze_me=True, struct_as_record=False)
-    
-    surface = data['surface']
-    vrts=np.zeros((len(surface.X),3))
-    vrts[:,0] = surface.X
-    vrts[:,1] = surface.Y
-    vrts[:,2] = surface.Z
-    faces = surface.TRIV-1
+    for i, name in enumerate(fnames): #show all meshes
 
-    fig = plt.figure()
-    triang = mtri.Triangulation(vrts[:,0], vrts[:,2], faces)
-    ax = fig.gca(projection='3d')
-    pl = ax.plot_trisurf(triang, vrts[:,1], lw=0.2, cmap=plt.get_cmap("nipy_spectral"), edgecolor="none", alpha=0.5) 
-    pl.set_array(np.squeeze(labels))
-    pl.autoscale()
-    plt.axis('off')
-    plt.title('Non rigidity visualization. Red/Yellow = high nonrigidity')
-    plt.show()
+        data = scipy.io.loadmat(os.path.join(datapath,'meshes',name),squeeze_me=True, struct_as_record=False)
+        
+        surface = data['surface']
+        vrts=np.zeros((len(surface.X),3))
+        vrts[:,0] = surface.X
+        vrts[:,1] = surface.Y
+        vrts[:,2] = surface.Z
+        faces = surface.TRIV-1
 
-    """set(t,'FaceLighting','phong','AmbientStrength',0.5)
-    light('Position',[5 0 5],'Style','infinite', 'Color', [.25 .25 .25])
-    light('Position',[0 5 5],'Style','infinite', 'Color', [.25 .25 .25])
-    light('Position',[-5 -5 5],'Style','infinite', 'Color', [.25 .25 .25])
-    """
+        fig = plt.figure()
+        triang = mtri.Triangulation(vrts[:,0], vrts[:,1], faces)
+        ax = fig.gca(projection='3d')
+        pl = ax.plot_trisurf(triang, vrts[:,2], lw=0.2, cmap=plt.get_cmap("nipy_spectral"), edgecolor="none", alpha=.6)
+        pl.set_array(np.squeeze(labels))
+        pl.autoscale()
+        plt.axis('off')
+        plt.title('Non rigidity visualization.')
+        plt.show()
+        
+
+        """ Generating rotating gifs
+        for ii in range(0,360,5): 
+            ax.view_init(10,100-ii)
+            plt.draw()
+            plt.savefig('movie%d_%d.png'%(i,ii), transparent=True)
+        """
+        
+        #Display graphs
+        plt.pause(5) 
+        plt.savefig('segmentation_%d.png' %i,transparent=True)
+        plt.close()
     
     non_rigidity = labels
     pickle.dump(non_rigidity, open(os.path.join(savedir,'PerPart_Nonrigidity.pkl'),"wb")) 
-
 
 if __name__=="__main__":
     demo_analysis("Centaur")

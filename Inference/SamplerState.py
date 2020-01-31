@@ -6,7 +6,6 @@ from random import sample
 from scipy.sparse import csr_matrix
 from Util.fast_cc import fast_cc
 from numpy.random import *
-np.random.seed(2)
 
 class SamplerState:
     
@@ -107,8 +106,6 @@ class SamplerState:
         logposterior=logposterior/np.sum(logposterior) 
 
         c_ji_new = np.random.choice(nbor, size = 1, p = logposterior)[0]
-        #c_ji_new = nbor[np.nonzero(np.random.multinomial(1,logposterior))][0]
-        #c_ji_new = nbor[int(len(nbor)/2)] #for debugging
         
         #update customer links
         self.c[iter,i_s] = c_ji_new 
@@ -132,7 +129,6 @@ class SamplerState:
             bookkeeper.table_lik[loc] = 0 
 
             bookkeeper.valid_clusters[large_idx:int(self.T[0,iter])-1] = bookkeeper.valid_clusters[large_idx+1:int(self.T[0,iter])]
-            #print(bookkeeper.valid_clusters[large_idx+1:int(self.T[0,iter])])  
             bookkeeper.pairwise_table_lik[:,loc] = np.ravel(bookkeeper.reset_vec.transpose())
             bookkeeper.pairwise_table_lik[loc,:] = np.ravel(bookkeeper.reset_vec)
             
@@ -226,6 +222,7 @@ class SamplerState:
                     #compute likelihoods across different body shapes, each
                     #having its own reference pose.
                     merged_lik_bodies[0,i] = mniw.computeMarginalLik(np.concatenate((data["Y"][:,t_prop_members,:] , data["Y"][:,t_curr_members,:]),axis=1), np.concatenate((data["X"][t_prop_members,:].transpose(),data["X"][t_curr_members,:].transpose()),axis=1))
+                
                 #compute part likelihood by summing over all bodies.
                 merged_lik = np.sum(merged_lik_bodies)
                 bookkeeper.pairwise_table_lik[min_t,max_t] = merged_lik
@@ -243,9 +240,7 @@ class SamplerState:
             #Y = data["Y"][:,table_members,:]
 
             table_lik_bodies[0,i] = mniw.computeMarginalLik(data["Y"][:,table_members,:],data["X"][table_members,:].transpose())
-            #[table_lik_bodies(i),~] = computeMultiPoseMNIWlik(Y,X,param);
-
-
+            
             #part likelihood is computed by summing over all bodies.
             table_lik = np.sum(table_lik_bodies)
 

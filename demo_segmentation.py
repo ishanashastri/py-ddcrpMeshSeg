@@ -57,18 +57,18 @@ def demo_segmentation():
 
     #load Mesh face neighbors, symmetric mapping along the midsagittal plane , 
     #and mesh faces as point clouds.  
-    [A,left_tris,pcf] = load_data(datapath,DATASET)
-    left_tris -= 1 
-    A = np.take(A,left_tris, axis=0) #-1 for 0 indexing
-    A = np.take(A, left_tris, axis=1)
    
+    [A,left_tris,pcf] = load_data(datapath,DATASET)
+    A = np.take(A,left_tris, axis=0) 
+    A = np.take(A, left_tris, axis=1)
+
     # create a ddCRP object.
     ddcrp = ddCRP(float(A[0,2]), A.astype('float64'))
     
     X = []
     for i in range(0,1):
         # reference coords.
-        X = np.insert(pcf.X,3, 1, axis=1)
+        X = np.insert(pcf.X, 3, 1, axis=1)
 
     Y = pcf.Y # these are the coordinates of triangles in different body poses.
 
@@ -78,7 +78,9 @@ def demo_segmentation():
 
     ax.scatter(pcf.X[:,0],pcf.X[:,1],pcf.X[:,2], 'b') 
     plt.title('Reference mesh visualized as a point cloud') 
-    plt.show()
+    plt.show(block=False)
+    plt.pause(2)
+    plt.close()
 
     # view(94,10) axis equal 
     # time.sleep(3.0) 
@@ -110,17 +112,18 @@ def demo_segmentation():
     ###########################################################################
 
     ######## Initialize and Run Sampler########################################
-    print('Gibbs Sampler will be run for %d iterations.\n' % NUMITER) 
+    if(not os.path.isfile(os.path.join(savedir,'MCMC_Chain.pkl'))): #only initialize and run if cached results don't exist
+        print('Gibbs Sampler will be run for %d iterations.\n' % NUMITER) 
 
-    # Create sampler state object
-    sampler_state = SamplerState(data,NUMITER) 
-    # Create bookkeeping object
-    bookkeeper = BookKeeper(sampler_state,savedir) 
-    # Run Sampler
-    if(not os.path.isfile(os.path.join(savedir,'MCMC_Chain.pkl'))):
+        # Create sampler state object
+        sampler_state = SamplerState(data,NUMITER) 
+        # Create bookkeeping object
+        bookkeeper = BookKeeper(sampler_state,savedir) 
+        # Run Sampler
         converged_sampler_state=sampler_state.run_sampler(ddcrp,mniw,data,bookkeeper,NUMITER) 
         pickle.dump(converged_sampler_state, open(os.path.join(savedir,'MCMC_Chain.pkl'),"wb"))
     else:
+        print('Loading from cache...')
         with open(os.path.join(savedir,'MCMC_Chain.pkl'), 'rb') as f:
             converged_sampler_state = pickle.load(f)
 
@@ -137,12 +140,14 @@ def demo_segmentation():
     plt.figure()
     plt.plot(ll_c, 'r-')
     plt.title('joint log-lik')
-    plt.show()
+    plt.show(block=False)
+    plt.savefig(os.path.join(savedir,'joint-log-lik.png'))
+    plt.pause(2)
+    plt.close()
     MAP_SAMPLE = np.argmax(ll_c) 
 
     # visualize result 
     visualize_result(2,converged_sampler_state,MAP_SAMPLE,left_tris,DATASET) 
-    #save(os.path.join(savedir,'State.mat')) #saves all workspace variables
     ###########################################################################
 
 if __name__=="__main__":
