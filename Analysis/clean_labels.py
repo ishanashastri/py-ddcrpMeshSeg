@@ -25,13 +25,13 @@ def clean_labels(A,mniw,param,data,left_tris):
     while(update):
         ind = np.nonzero(conflict_faces)
         # randomly order conflict traingles.
-        ind = ind[randperm(len(ind))]
+        ind = ind[np.random.permutation(len(ind))]
         ctr = 0
         iter_update = 0
         
         for i in ind.tranpose():
             if(ctr==100):
-                print('\nCleaning Labels iteration #%\n' %lapctr)
+                print('\nCleaning Labels iteration %d \n' % lapctr)
             
             ctr += 1
             # find the likelihood of the table current face is sitting at
@@ -47,21 +47,21 @@ def clean_labels(A,mniw,param,data,left_tris):
             [v,max_ind] = np.maximum(new_lik)
             # If moving the face helps assign it to the new table
             if(v>curr_lik):
-                param.t(i) = potential_tabs(max_ind)
+                param.t[0,i] = potential_tabs[max_ind]
                 #update stored table_likelihood
-                table_lik(param.t(i)) = v
+                table_lik[param.t[0,i]] = v
                 
                 # visualize the change
-            # visualize_result(3,param,1,left_tris)
+                # visualize_result(3,param,1,left_tris)
                 iter_update = 1
             
         
-        lapctr = lapctr + 1
+        lapctr += 1
         # if no updates happened reset update and exit
         #param = clean_surrounded(param,A)
 
         #break
-        if(iter_update==0)
+        if(iter_update==0):
             update = 0
             break
     
@@ -73,13 +73,13 @@ def clean_surrounded(param,A):
 # return set of faces surrounded by faces from other segments
 
     # go through all faces
-    for i = 1:param.num_data
+    for i in range(0, param.num_data):
         #nbors = A(i,:)
         curr_seg = param.t[i]
         #nbor_seg = setdiff(param.t(logical(A(i,:))),curr_seg)
-        nbor_segs = param.t(logical(A(i,:)))
+        nbor_segs = param.t(logical(A[i,:]))
         
-        if(isempty(intersect(nbor_segs,curr_seg)))
+        if(isempty(intersect(nbor_segs,curr_seg))):
             param.t(i) = nbor_segs(1)
         
     return param
@@ -96,11 +96,11 @@ def find_conflict(param,A):
         #nbors = A(i,:)
         curr_seg = param.t(i)
         #nbor_seg = setdiff(param.t(logical(A(i,:))),curr_seg)
-        nbor_segs = param.t(logical(A(i,:)))
-        nbor_seg = np.unique(nbor_segs)#nbor_segs(logical(nbor_segs - curr_seg))
+        nbor_segs = param.t[logical(A[i,:])]
+        nbor_seg = np.unique(nbor_segs)#nbor _segs(logical(nbor_segs - curr_seg))
         if(len(nbor_seg)>1):
             conflict_faces[i] = 1
-            nbors{i} = setdiff(nbor_seg,curr_seg)
+            nbors = np.setdiff1d(nbor_seg,curr_seg)
         
     return (conflict_faces,nbors)
     

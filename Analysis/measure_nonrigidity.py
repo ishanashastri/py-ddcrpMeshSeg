@@ -5,13 +5,8 @@ def measure_nonrigidity(test_set,labels):
     reference_pose = test_set.X
     error = np.inf*np.ones((1,1))
     per_trierr = np.zeros((len(labels),1))
-    [error[0],per_trierr[:,0]] = evaluate_segmentation_perpose(test_pose[:,:,0],reference_pose,labels)
-    
-    #for i = 1:size(test_pose,3)
-        #[error(i),per_trierr(:,i)] = evaluate_segmentation_perpose(test_pose{1}(:,:,i),reference_pose{1},labels)
-      
+    [error[0],per_trierr[:,0]] = evaluate_segmentation_perpose(test_pose[:,:,0],reference_pose,labels)   
     tri_err = np.sum(per_trierr,axis=1) 
-    #tri_err = np.reshape(tri_err, (-1,1))
     return (error,tri_err)
 
 
